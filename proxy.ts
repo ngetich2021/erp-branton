@@ -2,7 +2,7 @@
 import { auth } from "@/auth"; // your NextAuth auth config export (from auth.ts)
 import { NextResponse } from "next/server";
 
-const protectedRoutes = ["/admin", "/admin/:path*","/dashboard", "/dashboard/:path*",]; 
+const protectedRoutes = ["/admin", "/admin/:path*","/dashboard", "/dashboard/:path*","/hospital", "/hospital/:path*",]; 
 
 export default auth((req) => {
   const { nextUrl } = req;
@@ -28,5 +28,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/admin/:path*","/dashboard/:path*"], // only run on admin routes
+  matcher: ["/admin/:path*","/dashboard/:path*","/hospital/:path*" ], // only run on admin routes
 };

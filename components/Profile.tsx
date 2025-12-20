@@ -1,24 +1,42 @@
-"use client"
+"use client";
 
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { SignOutButton } from "./Sign-Out";
 
-interface ProfileProps {
-  id: string;
-}
 
-export default function Profile({ id }: ProfileProps) {
 
-    const {data:session} = useSession();
-    
+export default function Profile() {
+  const { data: session } = useSession();
+
   return (
-    <main className="fixed top-20 right-20 w-64 bg-gray-200 border border-gray-400 rounded-md p-4 shadow-lg z-50">
-      <h2 className="text-lg font-semibold mb-2">{session?.user.name}</h2>
-      <h2 className="text-lg font-semibold mb-2">{session?.user.email}</h2>
-      <p className="text-sm text-gray-700">User ID: {id}</p>
-      <Image src={session?.user.image || ''} alt="" width={24} height={24}/>
-      <SignOutButton/>
-    </main>
+    <div className="fixed top-20 right-4 w-fit bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50">
+      <div className="flex items-center gap-3">
+        {session?.user?.image ? (
+          <Image
+            src={session.user.image}
+            alt="Avatar"
+            width={40}
+            height={40}
+            className="rounded-full object-cover"
+          />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-lg font-medium text-gray-600">
+            {session?.user?.name?.[0]?.toUpperCase() || "U"}
+          </div>
+        )}
+
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-900 truncate">
+            {session?.user?.name || "User"}
+          </p>
+          <p className="text-xs text-gray-600 truncate">{session?.user?.email}</p>
+        </div>
+      </div>
+
+      <div className="mt-2 text-center">
+        <SignOutButton />
+      </div>
+    </div>
   );
 }

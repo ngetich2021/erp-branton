@@ -82,7 +82,7 @@ export default function Navbar() {
                 />
               </button>
 
-              {profile && <Profile id={session.user.id} />}
+              {profile && <Profile/>}
             </>
           )}
             </div>
