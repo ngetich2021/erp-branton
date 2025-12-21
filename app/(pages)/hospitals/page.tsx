@@ -124,7 +124,7 @@ export default function Hospitals() {
   };
 
   return (
-    <main className="mt-4 flex flex-col gap-6 px-4">
+    <main className="mt-4 flex flex-col gap-6 px-4 overflow-y-auto h-screen">
       {/* Header */}
       <div className="flex justify-between items-center flex-wrap gap-4">
         <div className="p-2 bg-blue-500 rounded-md flex flex-col items-center h-fit w-fit text-white">
@@ -132,12 +132,12 @@ export default function Hospitals() {
           <p className="font-bold text-xl">{hospitals.length}</p>
         </div>
 
-        <div className="flex gap-2 items-center">
+        <div className="flex md:gap-2 items-center">
           <label htmlFor="hospital">choose hospital</label>
           <select
             name="hospital"
             id="hospital"
-            className="w-fit border border-gray-200 p-2 rounded"
+            className="w-48 md:w-fit border border-gray-200 md:p-2 rounded"
           >
             <option value="">---Choose hospital---</option>
             {hospitals.map((h) => (
@@ -153,7 +153,7 @@ export default function Hospitals() {
             setEditingHospital(null);
             setShowForm(true);
           }}
-          className="p-2 rounded-md bg-green-500 hover:bg-green-600 flex items-center gap-2 text-white font-medium transition"
+          className="relative p-2 rounded-md bg-green-500 hover:bg-green-600 flex items-center gap-2 text-white font-medium transition"
         >
           <IoAddSharp size={24} />
           <span>Add Hospital</span>
@@ -161,7 +161,7 @@ export default function Hospitals() {
       </div>
 
       {/* Summary Cards */}
-      <div className="flex justify-between flex-wrap gap-4">
+      <div className="hidden md:flex justify-between flex-wrap gap-4">
         <div className="border border-gray-200 rounded-md flex flex-col items-center p-4 min-w-32">
           <h2 className="text-gray-600">total staff</h2>
           <h2 className="text-2xl font-bold">29</h2>
@@ -189,7 +189,7 @@ export default function Hospitals() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="bg-gray-200 border border-gray-400 p-3 rounded-md flex flex-wrap gap-4 justify-center">
+      <div className="bg-gray-200 border border-gray-400 p-3 rounded-md hidden md:flex flex-wrap gap-4 justify-center">
         <button className="px-4 py-2 bg-white rounded hover:bg-gray-300 transition">staff</button>
         <button className="px-4 py-2 bg-white rounded hover:bg-gray-300 transition">sales</button>
         <button className="px-4 py-2 bg-white rounded hover:bg-gray-300 transition">products</button>
@@ -200,7 +200,7 @@ export default function Hospitals() {
 
       {/* Hospitals Table */}
       <div className="mt-6">
-        <div className="flex justify-between items-center mb-4">
+        <div className="md:flex flex-col md:justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Available Hospitals</h2>
           <input
             type="text"
@@ -210,7 +210,7 @@ export default function Hospitals() {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-80"
+            className="px-2 md:px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 md:w-80"
           />
         </div>
 
@@ -254,30 +254,31 @@ export default function Hospitals() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm">{hospital.registrationNo}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">{hospital.dateCreated}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">{hospital.updatedDate}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreVertical className="h-4 w-4" />
-                              <span className="sr-only">Open menu</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleEdit(hospital)}>
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>Manage Staff</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-red-600 focus:text-red-600"
-                              onSelect={() => handleDelete(hospital)}
-                            >
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
+                      <td className="relative px-6 py-4 whitespace-nowrap text-sm">
+                    <DropdownMenu modal={false}>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                          <span className="sr-only">Open menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+
+                      <DropdownMenuContent align="end" side="bottom" sideOffset={4}>
+                        <DropdownMenuItem>View Details</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleEdit(hospital)}>
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>Manage Staff</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-red-600 focus:text-red-600"
+                          onSelect={() => handleDelete(hospital)}
+                        >
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
                     </tr>
                   ))
                 )}
@@ -312,7 +313,7 @@ export default function Hospitals() {
                 </select>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="hidden md:flex items-center gap-2">
                 <button
                   onClick={() => goToPage(currentPage - 1)}
                   disabled={currentPage === 1}

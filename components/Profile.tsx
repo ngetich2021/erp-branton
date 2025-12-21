@@ -10,7 +10,7 @@ export default function Profile() {
   const { data: session } = useSession();
 
   return (
-    <div className="fixed top-20 right-4 w-fit bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50">
+    <div className="fixed  w-fit bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50">
       <div className="flex items-center gap-3">
         {session?.user?.image ? (
           <Image

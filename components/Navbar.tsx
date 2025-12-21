@@ -49,7 +49,7 @@ export default function Navbar() {
   return (
     <nav className="flex gap-2 overflow-hidden">
       {/* Top bar */}
-      <div className="h-24 w-full fixed top-0 left-0 flex justify-between items-center z-50 bg-white border-b border-gray-500 px-4">
+      <div className="h-24 w-full fixed top-0 left-0 flex gap-8 md:gap-0 md:justify-between items-center z-50 bg-white border-b border-gray-500 px-4">
         <div className="flex items-center gap-4">
           <div className="h-16 w-16 relative flex-shrink-0">
             <Image src="/branton_logo.png" alt="Logo" fill className="object-cover rounded-full p-2 border border-gray-600" />
