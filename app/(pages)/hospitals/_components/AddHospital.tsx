@@ -50,7 +50,7 @@ export default function HospitalForm({ hospital, onClose }: HospitalFormProps) {
       />
 
       {/* Form Sidebar (slides from right) */}
-      <aside className="fixed inset-y-0 centre md:right-0 top-24 w-screen max-w-lg bg-white shadow-2xl z-50 overflow-y-auto">
+      <aside className="fixed inset-y-0 centre md:right-0 top-24 w-fit max-w-lg bg-white shadow-2xl z-50 overflow-y-auto">
         <div className="p-2">
           <div className="flex items-center justify-between mb-6">
             <button
