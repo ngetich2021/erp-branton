@@ -14,6 +14,18 @@ const nextConfig: NextConfig = {
         hostname: "*.googleusercontent.com",
         pathname: "/**",
       },
+      // Base Cloudinary
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/**",
+      },
+      // Wildcard for any subdomains (like proxy-int.res.cloudinary.com)
+      {
+        protocol: "https",
+        hostname: "**.res.cloudinary.com",
+        pathname: "/**",
+      },
     ],
   },
 };
