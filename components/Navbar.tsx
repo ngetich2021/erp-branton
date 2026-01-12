@@ -9,25 +9,34 @@ import { MdOutlineLocalPharmacy } from "react-icons/md";
 import { FaHospitalSymbol } from "react-icons/fa";
 import { FaPeopleCarryBox } from "react-icons/fa6";
 import { FaUserShield } from "react-icons/fa6";
-import { BiMoneyWithdraw } from "react-icons/bi";
+// import { BiMoneyWithdraw } from "react-icons/bi";
 import { GiExpense } from "react-icons/gi";
+import { MdOutlineAddTask } from "react-icons/md";
 import { MdVideogameAsset } from "react-icons/md";
 import { MdPayments } from "react-icons/md";
-import { IoIosNotificationsOutline } from "react-icons/io";
+import { IoIosNotificationsOutline, IoIosArrowBack, IoIosArrowForward, IoIosLogOut } from "react-icons/io";
+import { IoChevronDown, IoChevronUp } from "react-icons/io5"; // only chevrons from io5
 import Image from "next/image";
-import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
-import { IoIosLogOut } from "react-icons/io";
 import { useSession } from "next-auth/react";
 import Profile from "./Profile";
 
 const NavLinks = [
   { id: 1, title: "dashboard", href: "/dashboard", icon: <RiDashboard3Line size={32} /> },
   { id: 2, title: "patients", href: "/patients", icon: <BsPersonWalking size={32} /> },
-  { id: 3, title: "pharmacy", href: "/pharmacy", icon: <MdOutlineLocalPharmacy size={32} /> },
+  {
+    id: 3,
+    title: "pharmacy",
+    icon: <MdOutlineLocalPharmacy size={32} />,
+    submenu: [
+      { title: "pharmacy", href: "/pharmacy" },
+      { title: "Products", href: "/pharmacy/products" },
+      { title: "Sales", href: "/pharmacy/sales" },
+    ],
+  },
   { id: 4, title: "hospitals", href: "/hospitals", icon: <FaHospitalSymbol size={32} /> },
   { id: 5, title: "staff", href: "/staff", icon: <FaPeopleCarryBox size={32} /> },
   { id: 6, title: "suppliers", href: "/suppliers", icon: <FaUserShield size={32} /> },
-  { id: 7, title: "sales", href: "/sales", icon: <BiMoneyWithdraw size={32} /> },
+  { id: 7, title: "book", href: "/booking", icon: <MdOutlineAddTask size={32} /> },
   { id: 8, title: "expenses", href: "/expenses", icon: <GiExpense size={32} /> },
   { id: 9, title: "reports", href: "/reports", icon: <RiDashboard3Line size={32} /> },
   { id: 10, title: "assets", href: "/assets", icon: <MdVideogameAsset size={32} /> },
@@ -36,15 +45,20 @@ const NavLinks = [
 
 export default function Navbar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [openPharmacy, setOpenPharmacy] = useState(false);
+
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const [profile, setProfile] = useState(false);
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
 
   const isActive = (href: string) => pathname === href;
 
- const { data: session } = useSession();
-
- const [profile, setProfile] = useState(false);
+  // Check if we're in pharmacy section (main or subpages)
+  const isPharmacyActive =
+    pathname === "/pharmacy" ||
+    pathname.startsWith("/pharmacy/");
 
   return (
     <nav className="flex gap-2 overflow-hidden">
@@ -52,7 +66,12 @@ export default function Navbar() {
       <div className="h-24 w-full fixed top-0 left-0 flex justify-between items-center z-50 bg-white border-b border-gray-500 px-4">
         <div className="flex items-center gap-4">
           <div className="h-16 w-16 relative flex-shrink-0">
-            <Image src="/branton_logo.png" alt="Logo" fill className="object-cover rounded-full p-2 border border-gray-600" />
+            <Image
+              src="/branton_logo.png"
+              alt="Logo"
+              fill
+              className="object-cover rounded-full p-2 border border-gray-600"
+            />
           </div>
           <button onClick={toggleSidebar} className="xl:hidden text-gray-700 hover:text-gray-900">
             {isCollapsed ? <IoIosArrowForward size={32} /> : <IoIosArrowBack size={32} />}
@@ -66,71 +85,132 @@ export default function Navbar() {
               20
             </span>
           </div>
+
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 md:h-12 md:w-12 relative mr-16 sm:mr-0">
-            {session && (
-            <>
-              <button
-                onClick={() => setProfile(prev => !prev)}
-                className="relative w-10 h-10"
-              >
-                <Image
-                  src={session.user?.image ?? '/branton_logo.png'}
-                  alt="User"
-                  fill
-                  className="object-cover rounded-full border border-gray-600"
-                />
-              </button>
+              {session && (
+                <>
+                  <button
+                    onClick={() => setProfile((prev) => !prev)}
+                    className="relative w-10 h-10"
+                  >
+                    <Image
+                      src={session.user?.image ?? "/branton_logo.png"}
+                      alt="User"
+                      fill
+                      className="object-cover rounded-full border border-gray-600"
+                    />
+                  </button>
 
-              {profile && <Profile/>}
-            </>
-          )}
+                  {profile && <Profile />}
+                </>
+              )}
             </div>
+
             {session ? (
               <p className="hidden md:block font-bold text-sm text-nowrap text-gray-800">
                 Hey, {session.user?.name}
               </p>
             ) : (
-              'welcome'
+              "welcome"
             )}
           </div>
         </div>
       </div>
 
-      {/* Sidebar – this is the line we fixed */}
+      {/* Sidebar */}
       <div
         className={`fixed top-24 left-0 h-screen bg-white border-r border-gray-500 transition-all duration-300 flex flex-col ${
-          isCollapsed ? "w-20" : "w-64"   // ← fixed: w-64 instead of w-30
+          isCollapsed ? "w-20" : "w-64"
         } z-40`}
       >
         <ul className="flex flex-col gap-2 py-6 px-4 flex-1 overflow-y-auto">
-          {NavLinks.map((link) => (
-            <li key={link.id}>
-              <Link
-                href={link.href}
-                className={`flex items-center gap-4 rounded-lg px-3 py-3 transition-all ${
-                  isActive(link.href)
-                    ? "bg-blue-100 text-blue-700 font-bold shadow-md"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                <div className="flex shrink-0">{link.icon}</div>
-                {!isCollapsed && (
-                  <span className="text-sm lg:text-base font-semibold capitalize">{link.title}</span>
-                )}
-              </Link>
-            </li>
-          ))}
+          {NavLinks.map((link) => {
+            // Pharmacy with dropdown
+            if (link.submenu) {
+              return (
+                <li key={link.id}>
+                  <button
+                    type="button"
+                    onClick={() => setOpenPharmacy(!openPharmacy)}
+                    className={`w-full flex items-center justify-between gap-4 rounded-lg px-3 py-3 transition-all ${
+                      isPharmacyActive
+                        ? "bg-blue-100 text-blue-700 font-bold shadow-md"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex shrink-0">{link.icon}</div>
+                      {!isCollapsed && (
+                        <span className="text-sm lg:text-base font-semibold capitalize">
+                          {link.title}
+                        </span>
+                      )}
+                    </div>
+
+                    {!isCollapsed && (
+                      <div className="text-xl">
+                        {openPharmacy ? <IoChevronUp /> : <IoChevronDown />}
+                      </div>
+                    )}
+                  </button>
+
+                  {/* Submenu items */}
+                  {!isCollapsed && openPharmacy && (
+                    <ul className="ml-10 mt-1 flex flex-col gap-1">
+                      {link.submenu.map((sub) => (
+                        <li key={sub.title}>
+                          <Link
+                            href={sub.href}
+                            className={`block rounded-lg px-4 py-2 text-sm transition-all ${
+                              isActive(sub.href)
+                                ? "bg-blue-50 text-blue-700 font-medium"
+                                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                            }`}
+                          >
+                            {sub.title}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              );
+            }
+
+            // Regular menu item
+            return (
+              <li key={link.id}>
+                <Link
+                  href={link.href}
+                  className={`flex items-center gap-4 rounded-lg px-3 py-3 transition-all ${
+                    isActive(link.href)
+                      ? "bg-blue-100 text-blue-700 font-bold shadow-md"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <div className="flex shrink-0">{link.icon}</div>
+                  {!isCollapsed && (
+                    <span className="text-sm lg:text-base font-semibold capitalize">
+                      {link.title}
+                    </span>
+                  )}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
 
-        {/* Logout – now always visible */}
+        {/* Logout */}
         <div className="border-t border-gray-300 px-4 py-6">
           <button
             className="flex items-center gap-4 w-full rounded-lg px-3 py-3 text-gray-700 hover:bg-gray-100 transition-all"
             onClick={() => console.log("Logout clicked – add your signOut here")}
           >
             <IoIosLogOut size={32} className="flex-shrink-0" />
-            {!isCollapsed && <span className="text-sm lg:text-base font-semibold">Logout</span>}
+            {!isCollapsed && (
+              <span className="text-sm lg:text-base font-semibold">Logout</span>
+            )}
           </button>
         </div>
       </div>
