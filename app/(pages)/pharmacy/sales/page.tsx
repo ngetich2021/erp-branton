@@ -5,16 +5,31 @@ import SalesClient from "./_components/SalesClient";
 export default async function SalesPage() {
   const session = await auth();
   if (!session?.user?.id) {
-    return <div className="p-10 text-center text-gray-600">Please sign in to view sales</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <p className="text-xl text-gray-700">Please sign in to view sales.</p>
+      </div>
+    );
   }
 
+  const userId = session.user.id;
+
   const profile = await prisma.profile.findUnique({
-    where: { userId: session.user.id },
+    where: { userId },
     select: { stationId: true },
   });
 
   if (!profile?.stationId) {
-    return <div className="p-10 text-red-600">No station assigned to your account</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center bg-red-50 p-8 rounded-xl border border-red-200">
+          <p className="text-xl mb-4 text-red-800">No pharmacy assigned</p>
+          <p className="text-gray-600">
+            Please contact an administrator to assign you to a pharmacy station.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const pharmacy = await prisma.pharmacy.findUnique({
@@ -23,7 +38,16 @@ export default async function SalesPage() {
   });
 
   if (!pharmacy) {
-    return <div className="p-10 text-red-600">No pharmacy found for your station</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center bg-red-50 p-8 rounded-xl border border-red-200">
+          <p className="text-xl mb-4 text-red-800">No pharmacy found</p>
+          <p className="text-gray-600">
+            Your station does not have an associated pharmacy.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const sales = await prisma.sale.findMany({
@@ -33,22 +57,26 @@ export default async function SalesPage() {
       id: true,
       total: true,
       createdAt: true,
-      _count: {
-        select: { items: true },
-      },
+      paymentMethod: true,
+      _count: { select: { items: true } },
     },
   });
 
+  const totalSales = sales.reduce((sum, s) => sum + s.total, 0);
+
+  const initialSales = sales.map((s) => ({
+    id: s.id,
+    total: Number(s.total),
+    createdAt: s.createdAt,
+    itemCount: s._count.items,
+    paymentMethod: s.paymentMethod as "mpesa" | "cash",
+  }));
+
   return (
     <SalesClient
-      pharmacyName={pharmacy.name ?? "Pharmacy"}
-      totalSales={sales.reduce((sum, s) => sum + s.total, 0)}
-      initialSales={sales.map((s) => ({
-        id: s.id,
-        total: s.total,
-        createdAt: s.createdAt,
-        itemCount: s._count.items,
-      }))}
+      totalSales={totalSales}
+      initialSales={initialSales}
+      pharmacyName={pharmacy.name || "Your Pharmacy"}
     />
   );
 }

@@ -6,16 +6,17 @@ import Link from "next/link";
 import { RiDashboard3Line } from "react-icons/ri";
 import { BsPersonWalking } from "react-icons/bs";
 import { MdOutlineLocalPharmacy } from "react-icons/md";
+import { MdOutlineCreditScore } from "react-icons/md";
 import { FaHospitalSymbol } from "react-icons/fa";
 import { FaPeopleCarryBox } from "react-icons/fa6";
 import { FaUserShield } from "react-icons/fa6";
-// import { BiMoneyWithdraw } from "react-icons/bi";
 import { GiExpense } from "react-icons/gi";
 import { MdOutlineAddTask } from "react-icons/md";
 import { MdVideogameAsset } from "react-icons/md";
+import { PiScanSmileyBold } from "react-icons/pi";
 import { MdPayments } from "react-icons/md";
 import { IoIosNotificationsOutline, IoIosArrowBack, IoIosArrowForward, IoIosLogOut } from "react-icons/io";
-import { IoChevronDown, IoChevronUp } from "react-icons/io5"; // only chevrons from io5
+import { IoChevronDown, IoChevronUp } from "react-icons/io5";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import Profile from "./Profile";
@@ -36,16 +37,27 @@ const NavLinks = [
   { id: 4, title: "hospitals", href: "/hospitals", icon: <FaHospitalSymbol size={32} /> },
   { id: 5, title: "staff", href: "/staff", icon: <FaPeopleCarryBox size={32} /> },
   { id: 6, title: "suppliers", href: "/suppliers", icon: <FaUserShield size={32} /> },
-  { id: 7, title: "book", href: "/booking", icon: <MdOutlineAddTask size={32} /> },
+  {
+    id: 7,
+    title: "book",
+    icon: <MdOutlineAddTask size={32} />,
+    submenu: [
+      { title: "book", href: "/booking/booked" },
+      { title: "attend", href: "/booking/attend" },
+    ],
+  },
   { id: 8, title: "expenses", href: "/expenses", icon: <GiExpense size={32} /> },
   { id: 9, title: "reports", href: "/reports", icon: <RiDashboard3Line size={32} /> },
   { id: 10, title: "assets", href: "/assets", icon: <MdVideogameAsset size={32} /> },
   { id: 11, title: "payments", href: "/payments", icon: <MdPayments size={32} /> },
+  { id: 12, title: "labs", href: "/labs", icon: <PiScanSmileyBold size={32} /> },
+  { id: 13, title: "credit", href: "/payments/credit", icon: <MdOutlineCreditScore size={32} /> },
 ];
 
 export default function Navbar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [openPharmacy, setOpenPharmacy] = useState(false);
+  const [openBook, setOpenBook] = useState(false);           // ← added for "book" submenu
 
   const pathname = usePathname();
   const { data: session } = useSession();
@@ -55,10 +67,16 @@ export default function Navbar() {
 
   const isActive = (href: string) => pathname === href;
 
-  // Check if we're in pharmacy section (main or subpages)
+  // Check if we're in pharmacy section
   const isPharmacyActive =
     pathname === "/pharmacy" ||
     pathname.startsWith("/pharmacy/");
+
+  // Check if we're in booking section
+  const isBookingActive =
+    pathname === "/booking/booked" ||
+    pathname === "/booking/attend" ||
+    pathname.startsWith("/booking/");
 
   return (
     <nav className="flex gap-2 overflow-hidden">
@@ -127,7 +145,7 @@ export default function Navbar() {
         <ul className="flex flex-col gap-2 py-6 px-4 flex-1 overflow-y-auto">
           {NavLinks.map((link) => {
             // Pharmacy with dropdown
-            if (link.submenu) {
+            if (link.title === "pharmacy" && link.submenu) {
               return (
                 <li key={link.id}>
                   <button
@@ -155,8 +173,60 @@ export default function Navbar() {
                     )}
                   </button>
 
-                  {/* Submenu items */}
+                  {/* Pharmacy submenu */}
                   {!isCollapsed && openPharmacy && (
+                    <ul className="ml-10 mt-1 flex flex-col gap-1">
+                      {link.submenu.map((sub) => (
+                        <li key={sub.title}>
+                          <Link
+                            href={sub.href}
+                            className={`block rounded-lg px-4 py-2 text-sm transition-all ${
+                              isActive(sub.href)
+                                ? "bg-blue-50 text-blue-700 font-medium"
+                                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                            }`}
+                          >
+                            {sub.title}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              );
+            }
+
+            // Book with dropdown (new)
+            if (link.title === "book" && link.submenu) {
+              return (
+                <li key={link.id}>
+                  <button
+                    type="button"
+                    onClick={() => setOpenBook(!openBook)}
+                    className={`w-full flex items-center justify-between gap-4 rounded-lg px-3 py-3 transition-all ${
+                      isBookingActive
+                        ? "bg-blue-100 text-blue-700 font-bold shadow-md"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex shrink-0">{link.icon}</div>
+                      {!isCollapsed && (
+                        <span className="text-sm lg:text-base font-semibold capitalize">
+                          {link.title}
+                        </span>
+                      )}
+                    </div>
+
+                    {!isCollapsed && (
+                      <div className="text-xl">
+                        {openBook ? <IoChevronUp /> : <IoChevronDown />}
+                      </div>
+                    )}
+                  </button>
+
+                  {/* Book submenu */}
+                  {!isCollapsed && openBook && (
                     <ul className="ml-10 mt-1 flex flex-col gap-1">
                       {link.submenu.map((sub) => (
                         <li key={sub.title}>
@@ -182,9 +252,9 @@ export default function Navbar() {
             return (
               <li key={link.id}>
                 <Link
-                  href={link.href}
+                  href={link.href!}
                   className={`flex items-center gap-4 rounded-lg px-3 py-3 transition-all ${
-                    isActive(link.href)
+                    isActive(link.href!)
                       ? "bg-blue-100 text-blue-700 font-bold shadow-md"
                       : "text-gray-700 hover:bg-gray-100"
                   }`}

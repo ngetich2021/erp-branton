@@ -1,4 +1,3 @@
-// app/(dashboard)/sales/actions.ts
 "use server";
 
 import { auth } from "@/auth";
@@ -25,10 +24,23 @@ export type ProductFromServer = {
   expires: string | null;
 };
 
-/**
- * Get the pharmacy ID for the current authenticated user
- * @throws Error if no station or pharmacy is found
- */
+export type SaleDetailFromServer = {
+  id: string;
+  total: number;
+  paymentMethod: PaymentMethod;
+  createdAt: Date;
+  pharmacyName: string;           // ← added for receipt display
+  items: {
+    name: string;
+    unitPrice: number;
+    quantity: number;
+    total: number;
+  }[];
+};
+
+const VALID_PAYMENT_METHODS = ["mpesa", "cash"] as const;
+export type PaymentMethod = (typeof VALID_PAYMENT_METHODS)[number];
+
 async function getUserPharmacyId(userId: string): Promise<string> {
   const profile = await prisma.profile.findUnique({
     where: { userId },
@@ -51,12 +63,8 @@ async function getUserPharmacyId(userId: string): Promise<string> {
   return pharmacy.id;
 }
 
-/**
- * Fetch all products available in the user's pharmacy
- */
 export async function getPharmacyProductsAction(): Promise<
-  | { success: true; products: ProductFromServer[] }
-  | { success: false; error: string }
+  { success: true; products: ProductFromServer[] } | { success: false; error: string }
 > {
   try {
     const session = await auth();
@@ -80,18 +88,81 @@ export async function getPharmacyProductsAction(): Promise<
 
     return { success: true, products };
   } catch (err) {
-    console.error("[getPharmacyProductsAction]", err);
-    const message = err instanceof Error ? err.message : "Failed to load products";
-    return { success: false, error: message };
+    console.error("getPharmacyProductsAction error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to load products",
+    };
   }
 }
 
-/**
- * Save (create or update) a sale and handle inventory deduction
- */
+export async function getSaleDetailsAction(saleId: string): Promise<
+  { success: true; sale: SaleDetailFromServer } | { success: false; error: string }
+> {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, error: "Not authenticated" };
+    }
+
+    const pharmacyId = await getUserPharmacyId(session.user.id);
+
+    const sale = await prisma.sale.findUnique({
+      where: { id: saleId },
+      include: {
+        items: {
+          select: {
+            name: true,
+            unitPrice: true,
+            quantity: true,
+            total: true,
+          },
+          orderBy: { createdAt: "asc" },
+        },
+        pharmacy: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!sale) {
+      return { success: false, error: "Sale not found" };
+    }
+
+    if (sale.pharmId !== pharmacyId) {
+      return { success: false, error: "Unauthorized: Not your pharmacy sale" };
+    }
+
+    return {
+      success: true,
+      sale: {
+        id: sale.id,
+        total: sale.total,                // already number in schema (Int)
+        paymentMethod: sale.paymentMethod as PaymentMethod,
+        createdAt: sale.createdAt,
+        pharmacyName: sale.pharmacy?.name ?? "Unknown Pharmacy",
+        items: sale.items.map((i) => ({
+          name: i.name,
+          unitPrice: i.unitPrice,
+          quantity: i.quantity,
+          total: i.total,
+        })),
+      },
+    };
+  } catch (err) {
+    console.error("getSaleDetailsAction error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to load sale details",
+    };
+  }
+}
+
 export async function saveSaleAction(
   _prevState: SaleActionState,
-  formData: FormData
+  formData: FormData,
 ): Promise<SaleActionState> {
   try {
     const session = await auth();
@@ -100,42 +171,46 @@ export async function saveSaleAction(
     }
 
     const saleId = formData.get("saleId")?.toString() ?? null;
-    const itemsJson = formData.get("items")?.toString();
+    const itemsRaw = formData.get("items")?.toString();
+    const paymentMethodRaw = formData.get("paymentMethod")?.toString();
 
-    if (!itemsJson) {
+    if (!itemsRaw) {
       return { success: false, error: "No items data received" };
     }
 
-    let parsedItems: SaleItemInput[];
+    let items: SaleItemInput[];
     try {
-      parsedItems = JSON.parse(itemsJson);
+      items = JSON.parse(itemsRaw);
     } catch {
-      return { success: false, error: "Invalid items format (JSON parse failed)" };
+      return { success: false, error: "Invalid items JSON format" };
     }
 
-    if (!Array.isArray(parsedItems) || parsedItems.length === 0) {
+    if (!Array.isArray(items) || items.length === 0) {
       return { success: false, error: "At least one item is required" };
+    }
+
+    if (!paymentMethodRaw || !VALID_PAYMENT_METHODS.includes(paymentMethodRaw as PaymentMethod)) {
+      return { success: false, error: "Payment method must be 'mpesa' or 'cash'" };
     }
 
     const pharmacyId = await getUserPharmacyId(session.user.id);
 
-    // 1. Validate items & enrich with real product data when applicable
     const validatedItems = await Promise.all(
-      parsedItems.map(async (input) => {
-        if (!input.name?.trim()) {
-          throw new Error("Every item must have a name");
+      items.map(async (item) => {
+        if (!item.name?.trim()) {
+          throw new Error("Item name is required");
         }
 
-        if (input.quantity < 1 || !Number.isInteger(input.quantity)) {
-          throw new Error("Quantity must be positive integer");
+        if (item.quantity < 1 || !Number.isInteger(item.quantity)) {
+          throw new Error("Quantity must be positive integer ≥ 1");
         }
 
-        let finalPrice = input.unitPrice;
-        let linkedProduct: { id: string; name: string; cost: number; quantity: number; pharmId: string } | null = null;
+        let finalPrice = item.unitPrice;
+        let product = null;
 
-        if (input.productId) {
-          linkedProduct = await prisma.product.findUnique({
-            where: { id: input.productId },
+        if (item.productId) {
+          product = await prisma.product.findUnique({
+            where: { id: item.productId },
             select: {
               id: true,
               name: true,
@@ -145,53 +220,61 @@ export async function saveSaleAction(
             },
           });
 
-          if (!linkedProduct) {
-            throw new Error(`Product not found: ${input.productId}`);
+          if (!product) {
+            throw new Error(`Product not found: ${item.productId}`);
+          }
+          if (product.pharmId !== pharmacyId) {
+            throw new Error("Product does not belong to your pharmacy");
+          }
+          if (product.quantity < item.quantity) {
+            throw new Error(`Insufficient stock for "${product.name}": ${product.quantity} available`);
           }
 
-          if (linkedProduct.pharmId !== pharmacyId) {
-            throw new Error(`Product "${linkedProduct.name}" does not belong to your pharmacy`);
-          }
-
-          if (linkedProduct.quantity < input.quantity) {
-            throw new Error(
-              `Insufficient stock for "${linkedProduct.name}": ${linkedProduct.quantity} available, requested ${input.quantity}`
-            );
-          }
-
-          finalPrice = linkedProduct.cost;
+          finalPrice = product.cost;
         }
 
         return {
-          name: input.name.trim(),
+          name: item.name.trim(),
           unitPrice: finalPrice,
-          quantity: input.quantity,
-          productId: input.productId ?? null,
-          total: finalPrice * input.quantity,
+          quantity: item.quantity,
+          productId: item.productId ?? null,
+          total: finalPrice * item.quantity,
         };
-      })
+      }),
     );
 
-    const grandTotal = validatedItems.reduce((acc, item) => acc + item.total, 0);
+    const grandTotal = validatedItems.reduce((acc, i) => acc + i.total, 0);
 
-    // 2. Atomic transaction: update/create sale + items + stock
     await prisma.$transaction(async (tx) => {
+      // Decrease stock for inventory products
+      for (const item of validatedItems) {
+        if (item.productId) {
+          const updated = await tx.product.update({
+            where: {
+              id: item.productId,
+              quantity: { gte: item.quantity },
+            },
+            data: { quantity: { decrement: item.quantity } },
+            select: { id: true },
+          });
+
+          if (!updated) {
+            throw new Error(`Stock conflict for product ${item.productId}`);
+          }
+        }
+      }
+
       let targetSaleId: string;
 
       if (saleId) {
-        // ── UPDATE EXISTING SALE ──────────────────────────────────────
+        // Update existing sale
         const existing = await tx.sale.findUnique({
           where: { id: saleId },
           select: { id: true, pharmId: true },
         });
 
-        if (!existing) {
-          throw new Error("Sale not found");
-        }
-
-        if (existing.pharmId !== pharmacyId) {
-          throw new Error("Unauthorized: You can only edit sales from your pharmacy");
-        }
+        if (!existing) throw new Error("Sale not found");
+        if (existing.pharmId !== pharmacyId) throw new Error("Unauthorized");
 
         targetSaleId = existing.id;
 
@@ -199,14 +282,18 @@ export async function saveSaleAction(
 
         await tx.sale.update({
           where: { id: targetSaleId },
-          data: { total: grandTotal },
+          data: {
+            total: grandTotal,
+            paymentMethod: paymentMethodRaw,
+          },
         });
       } else {
-        // ── CREATE NEW SALE ───────────────────────────────────────────
+        // Create new sale
         const created = await tx.sale.create({
           data: {
             pharmId: pharmacyId,
             total: grandTotal,
+            paymentMethod: paymentMethodRaw,
           },
           select: { id: true },
         });
@@ -214,7 +301,7 @@ export async function saveSaleAction(
         targetSaleId = created.id;
       }
 
-      // ── CREATE ITEMS ──────────────────────────────────────────────
+      // Create sale items
       await tx.saleItem.createMany({
         data: validatedItems.map((item) => ({
           saleId: targetSaleId,
@@ -225,18 +312,6 @@ export async function saveSaleAction(
           productId: item.productId,
         })),
       });
-
-      // ── DEDUCT STOCK ──────────────────────────────────────────────
-      for (const item of validatedItems) {
-        if (item.productId) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: {
-              quantity: { decrement: item.quantity },
-            },
-          });
-        }
-      }
     });
 
     revalidatePath("/sales");
@@ -246,20 +321,10 @@ export async function saveSaleAction(
       message: saleId ? "Sale updated successfully" : "Sale recorded successfully",
     };
   } catch (err) {
-    console.error("[saveSaleAction]", err);
-
-    let errorMessage = "Failed to process sale";
-
-    if (err instanceof Error) {
-      errorMessage = err.message;
-      // Optional: make some messages more user-friendly
-      if (errorMessage.includes("Insufficient stock")) {
-        errorMessage = errorMessage; // already good
-      } else if (errorMessage.includes("not found")) {
-        errorMessage = "One or more products could not be found";
-      }
-    }
-
-    return { success: false, error: errorMessage };
+    console.error("saveSaleAction error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to save sale",
+    };
   }
 }

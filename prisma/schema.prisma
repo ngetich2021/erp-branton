@@ -87,6 +87,7 @@ model Hospital {
   suppliers      Supplier[]
   assets         Asset[]
   expenses       Expense[]
+  bookings       Book[]
   pharmacy       Pharmacy?  @relation("HospitalPharmacy")
 
   @@index([name])
@@ -113,6 +114,7 @@ model Patient {
   medicalHistory String?
   notes          String?
   refferedBy     String?
+  bookings       Book[]
   servedById     String
   hospitalId     String
   hospital       Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
@@ -181,13 +183,14 @@ model Product {
 }
 
 model Sale {
-  id        String     @id @default(cuid())
-  pharmId   String
-  pharmacy  Pharmacy   @relation(fields: [pharmId], references: [id], onDelete: SetNull)
-  items     SaleItem[]
-  total     Int
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id            String     @id @default(cuid())
+  pharmId       String
+  pharmacy      Pharmacy   @relation(fields: [pharmId], references: [id], onDelete: SetNull)
+  items         SaleItem[]
+  total         Int
+  paymentMethod String     @default("mpesa")
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   @@index([pharmId])
   @@index([createdAt])
@@ -203,4 +206,82 @@ model SaleItem {
   total     Int
   productId String?
   createdAt DateTime @default(now())
+}
+
+model Book {
+  id              String     @id @default(cuid())
+  attended        String?
+  prescription    String?
+  bill            Int?
+  paymentMethod   String?    @default("mpesa")
+  billMethod      String?    @default("mpesa")
+  consultationFee Int
+  patientId       String
+  patient         Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  hospitalId      String
+  hospital        Hospital   @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  labOrders       LabOrder[]
+  credit          Credit?    @relation("BookCredit") // ← removed fields + references
+  creditId        String?    @unique // ← still needed for the FK column
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+model Labs {
+  id        String     @id @default(cuid())
+  name      String
+  charges   Int
+  labOrders LabOrder[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model LabOrder {
+  id        String   @id @default(cuid())
+  bookId    String
+  labId     String
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  lab       Labs     @relation(fields: [labId], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+
+  @@unique([bookId, labId])
+}
+
+model Credit {
+  id                String          @id @default(cuid())
+  book              Book            @relation("BookCredit", fields: [bookId], references: [id], onDelete: Cascade)
+  bookId            String          @unique
+  totalAmount       Int
+  paidAmount        Int             @default(0)
+  balance           Int
+  status            CreditStatus    @default(PENDING)
+  lastPaidAt        DateTime?
+  lastPaymentMethod String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  payments          CreditPayment[]
+
+  @@index([status])
+  @@index([balance])
+}
+
+enum CreditStatus {
+  PENDING
+  PARTIAL
+  PAID
+  CANCELLED
+}
+
+model CreditPayment {
+  id             String   @id @default(cuid())
+  creditId       String
+  credit         Credit   @relation(fields: [creditId], references: [id], onDelete: Cascade)
+  amount         Int
+  paymentMethod  String   @default("mpesa")
+  transactionRef String?
+  notes          String?
+  createdAt      DateTime @default(now())
+
+  @@index([creditId])
+  @@index([createdAt])
 }
