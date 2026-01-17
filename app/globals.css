@@ -123,3 +123,9 @@
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  button, input, .no-print { display: none !important; }
+  body { background: white; }
+  .bg-gray-100, .bg-white { background: white !important; }
+}

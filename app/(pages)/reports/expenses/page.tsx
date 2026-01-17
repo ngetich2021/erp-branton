@@ -1,15 +1,14 @@
+// app/reports/expenses/page.tsx
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
-import PatientsClient from "./_components/PatientsClient";
-import { getPatients } from "./_components/actionsPatient";
+import ExpensesClient from "./_components/ExpensesClient";
 
-export default async function PatientsPage() {
+export default async function ExpensesReportPage() {
   const session = await auth();
-
   if (!session?.user?.id) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <p className="text-xl text-gray-700">Please sign in to access patients.</p>
+        <p className="text-xl text-gray-700">Please sign in to view reports.</p>
       </div>
     );
   }
@@ -35,7 +34,32 @@ export default async function PatientsPage() {
   }
 
   const hospitalId = profile.stationId;
-  const patients = await getPatients(hospitalId);
 
-  return <PatientsClient initialPatients={patients} hospitalId={hospitalId} />;
+  const [hospital, expenses] = await Promise.all([
+    prisma.hospital.findUnique({
+      where: { id: hospitalId },
+      select: { name: true },
+    }),
+    prisma.expense.findMany({
+      where: { hospitalId },
+      select: {
+        id: true,
+        transactionId: true,
+        description: true,
+        amount: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+
+  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+  return (
+    <ExpensesClient
+      totalExpenses={totalExpenses}
+      initialExpenses={expenses}
+      userHospitalName={hospital?.name || "Your Hospital"}
+    />
+  );
 }
