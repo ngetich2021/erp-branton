@@ -5,7 +5,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://dummy:dummy@dummy-host:5432/dummy-db?sslmode=disable"
 
 }
 
