@@ -1,23 +1,24 @@
-// lib/prisma.ts  (fixed version)
+// lib/prisma.ts   (create this file at project root → lib/prisma.ts)
 
-import { PrismaClient } from "@/app/generated/prisma";  // ← Remove /client if it was there
-
+import { PrismaClient } from "@/generated/prisma/client";   // ← correct relative path
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 
 const connectionString = process.env.DATABASE_URL;
-
 if (!connectionString) {
   throw new Error("Missing DATABASE_URL environment variable");
 }
 
 const pool = new Pool({ connectionString });
-const adapter = new PrismaPg(pool);  // add { schema: "public" } if your schema isn't public
+const adapter = new PrismaPg(pool);
 
-// Singleton pattern (good for Next.js hot reload in dev)
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
 
-const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter });
+// Avoid multiple instances in dev (hot reloading)
+export const prisma =
+  globalForPrisma.prisma ?? new PrismaClient({ adapter });
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
