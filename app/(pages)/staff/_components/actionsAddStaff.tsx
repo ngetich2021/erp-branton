@@ -62,9 +62,18 @@ export async function deleteStaffAction(userId: string): Promise<ActionResult> {
 
 export async function getUsersRolesHospitals() {
   const [users, roles, hospitals] = await Promise.all([
-    prisma.user.findMany({
-      where: { email: { not: null } },
-      select: { id: true, email: true },
+       prisma.user.findMany({
+      where: {
+        email: { not: null },
+        profile: {
+          role: "user",           // ← this is the important filter
+        },
+      },
+      select: { 
+        id: true, 
+        email: true,
+        // optional: name: true,    // if you want to show name instead of email
+      },
       orderBy: { email: "asc" },
     }),
     prisma.role.findMany({

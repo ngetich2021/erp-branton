@@ -8,17 +8,14 @@ export const revalidate = 1;
 export default async function StaffPage() {
   const { users, roles, hospitals } = await getUsersRolesHospitals();
 
-const profiles = await prisma.profile.findMany({
-  where: {
-    role: "user",
-  },
-  include: {
-    user: {
-      select: { email: true },
+  const profiles = await prisma.profile.findMany({
+    include: {
+      user: {
+        select: { email: true },
+      },
     },
-  },
-  orderBy: { fullName: "asc" },
-});
+    orderBy: { fullName: "asc" },
+  });
 
   const initialStaff = profiles.map((p) => ({
     userId: p.userId,
