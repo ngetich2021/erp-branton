@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import AssetsClient from "./_components/AssetsClient";
 
-export const revalidate = 1;
+export const dynamic = "force-dynamic";
 
 export default async function AssetsReportPage() {
   const session = await auth();

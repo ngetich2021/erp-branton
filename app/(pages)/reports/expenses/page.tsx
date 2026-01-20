@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import ExpensesClient from "./_components/ExpensesClient";
 
-export const revalidate = 1;
+export const dynamic = "force-dynamic";
 
 export default async function ExpensesReportPage() {
   const session = await auth();

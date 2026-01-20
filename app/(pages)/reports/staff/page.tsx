@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import StaffClient from "./_components/StaffClient";
 
-export const revalidate = 1;
+export const dynamic = "force-dynamic";
 
 export default async function StaffReportPage() {
   const session = await auth();

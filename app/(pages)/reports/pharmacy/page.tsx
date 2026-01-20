@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import PharmacyClient from "./_components/PharmacyClient";
 
-export const revalidate = 1;
+export const dynamic = "force-dynamic";
 
 export default async function PharmacyReportPage() {
   const session = await auth();
