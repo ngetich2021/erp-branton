@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import PharmaciesClient from "./_components/PharmaciesClient";
 
+export const revalidate = 1;
+
 export default async function PharmaciesPage() {
   const session = await auth();
   if (!session?.user?.id) {

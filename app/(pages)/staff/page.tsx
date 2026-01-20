@@ -3,6 +3,8 @@ import { getUsersRolesHospitals } from "./_components/actionsAddStaff";
 import StaffClient from "./_components/StaffClient";
 import prisma from "@/lib/prisma";
 
+export const revalidate = 1;
+
 export default async function StaffPage() {
   const { users, roles, hospitals } = await getUsersRolesHospitals();
 

@@ -3,6 +3,8 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import ProductsClient from "./_components/ProductsClient";
 
+export const revalidate = 1;
+
 export default async function ProductsPage() {
   const session = await auth();
   if (!session?.user?.id) {

@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import PaymentsClient from "./_components/PaymentsClient";
 
+export const revalidate = 1;
+
 export default async function PaymentsReportPage() {
   const session = await auth();
   if (!session?.user?.id) {

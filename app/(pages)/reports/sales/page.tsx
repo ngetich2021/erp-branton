@@ -5,6 +5,8 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import SalesClient from "./_components/SalesClient";
 
+export const revalidate = 1;
+
 export default async function SalesReportPage() {
   const session = await auth();
   if (!session?.user?.id) {

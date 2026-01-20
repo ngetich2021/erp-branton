@@ -3,6 +3,8 @@
 import prisma from "@/lib/prisma";
 import WaitingList from "./_components/WaitingList";
 
+export const revalidate = 1;
+
 export default async function AttendPage() {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);

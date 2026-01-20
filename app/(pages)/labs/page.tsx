@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import LabsClient from "./_components/LabsClient";
 
+export const revalidate = 1;
+
 export default async function LabsPage() {
   const session = await auth();
   if (!session?.user?.id) {

@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import PatientsClient from "./_components/PatientsClient";
 
+export const revalidate = 1;
+
 export default async function PatientsReportPage() {
   const session = await auth();
   if (!session?.user?.id) {

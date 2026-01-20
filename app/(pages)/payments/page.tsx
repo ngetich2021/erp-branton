@@ -10,6 +10,8 @@ interface PaymentsPageProps {
   searchParams: Promise<{ tab?: string }>;  // ← important: Promise type
 }
 
+export const revalidate = 1;
+
 export default async function PaymentsPage({ searchParams }: PaymentsPageProps) {
   // Await it here – this is the fix
   const resolvedSearchParams = await searchParams;

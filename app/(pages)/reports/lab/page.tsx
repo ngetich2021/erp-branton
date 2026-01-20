@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import LabClient from "./_components/LabClient";
 
+export const revalidate = 1;
+
 export default async function LabReportPage() {
   const session = await auth();
   if (!session?.user?.id) return <div className="flex items-center justify-center min-h-screen bg-gray-100"><p className="text-xl text-gray-700">Please sign in.</p></div>;

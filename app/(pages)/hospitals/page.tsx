@@ -35,6 +35,8 @@ type HospitalForForm = {
   incharge?: string;
 };
 
+export const revalidate = 1;
+
 export default function Hospitals() {
   const [showForm, setShowForm] = useState(false);
   const [editingHospital, setEditingHospital] = useState<HospitalForForm | null>(null);

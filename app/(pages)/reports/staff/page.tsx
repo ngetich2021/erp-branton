@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import StaffClient from "./_components/StaffClient";
 
+export const revalidate = 1;
+
 export default async function StaffReportPage() {
   const session = await auth();
   if (!session?.user?.id) return <div className="flex items-center justify-center min-h-screen bg-gray-100"><p className="text-xl text-gray-700">Please sign in.</p></div>;

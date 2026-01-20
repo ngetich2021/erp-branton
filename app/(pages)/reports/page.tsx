@@ -4,6 +4,8 @@
 import { auth } from "@/auth";
 import Link from "next/link";
 
+export const revalidate = 1;
+
 export default async function ReportsDashboard() {
   const session = await auth();
   if (!session?.user?.id) {

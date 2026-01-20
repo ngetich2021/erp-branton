@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import AssetsClient from "./_components/AssetsClient";
 
+export const revalidate = 1;
+
 export default async function AssetsPage() {
   const session = await auth();
   if (!session?.user?.id) {

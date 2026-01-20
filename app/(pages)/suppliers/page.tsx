@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import SuppliersClient from "./_components/SuppliersClient";
 
+export const revalidate = 1;
+
 export default async function SuppliersPage() {
   const session = await auth();
   if (!session?.user?.id) {

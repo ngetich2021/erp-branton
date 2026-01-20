@@ -3,6 +3,8 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import BookingsClient from "./_components/BookingsClient";
 
+export const revalidate = 1;
+
 export default async function BookingsPage() {
   const session = await auth();
   if (!session?.user?.id) {

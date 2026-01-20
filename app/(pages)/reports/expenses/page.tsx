@@ -3,6 +3,8 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import ExpensesClient from "./_components/ExpensesClient";
 
+export const revalidate = 1;
+
 export default async function ExpensesReportPage() {
   const session = await auth();
   if (!session?.user?.id) {

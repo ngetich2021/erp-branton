@@ -3,6 +3,7 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "@/lib/prisma";
+import { PrismaClient } from "@prisma/client";
 
 // Extend NextAuth types
 declare module "next-auth" {
@@ -28,7 +29,7 @@ declare module "next-auth/jwt" {
 }
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma as unknown as PrismaClient),
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
