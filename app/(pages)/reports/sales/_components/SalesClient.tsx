@@ -1,6 +1,8 @@
 // app/reports/sales/_components/SalesClient.tsx
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState } from "react";
 
 type SaleItem = {

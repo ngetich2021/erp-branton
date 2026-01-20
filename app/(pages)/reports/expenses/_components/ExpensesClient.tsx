@@ -1,6 +1,8 @@
 // app/reports/expenses/_components/ExpensesClient.tsx
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState } from "react";
 import ExpenseViewModal from "./ExpenseViewModal";
 

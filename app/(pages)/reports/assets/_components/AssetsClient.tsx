@@ -1,6 +1,8 @@
 // app/reports/assets/_components/AssetsClient.tsx
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState } from "react";
 import AssetViewModal from "./AssetViewModal";
 
