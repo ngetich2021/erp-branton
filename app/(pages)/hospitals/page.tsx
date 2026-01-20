@@ -1,5 +1,7 @@
 "use client";
 
+export const revalidate = 1;
+
 import { useState, useEffect } from "react";
 import { IoAddSharp } from "react-icons/io5";
 import { getHospitals } from "./_components/getHospitals";
@@ -35,7 +37,6 @@ type HospitalForForm = {
   incharge?: string;
 };
 
-export const revalidate = 1;
 
 export default function Hospitals() {
   const [showForm, setShowForm] = useState(false);
