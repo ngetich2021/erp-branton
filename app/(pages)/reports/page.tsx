@@ -1,5 +1,3 @@
-// app/reports/page.tsx
-"use server";
 
 import { auth } from "@/auth";
 import Link from "next/link";
