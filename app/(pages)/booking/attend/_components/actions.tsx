@@ -33,10 +33,10 @@ export async function attendPatientAction(formData: FormData) {
   try {
     await prisma.$transaction(async (tx) => {
       // 1. Get the consultation fee already set by receptionist
-      const currentBook = await tx.book.findUniqueOrThrow({
-        where: { id },
-        select: { consultationFee: true },
-      });
+      // const currentBook = await tx.book.findUniqueOrThrow({
+      //   where: { id },
+      //   select: { consultationFee: true },
+      // });
 
       // 2. Get charges of selected labs
       const labs = selectedLabIds.length > 0
@@ -49,7 +49,7 @@ export async function attendPatientAction(formData: FormData) {
       const labsTotal = labs.reduce((sum, lab) => sum + lab.charges, 0);
 
       // 3. Final bill = consultation (reception) + doctor bill + labs
-      const finalBill = currentBook.consultationFee + doctorBill + labsTotal;
+      const finalBill = doctorBill + labsTotal;
 
       // 4. Update Book record
       await tx.book.update({

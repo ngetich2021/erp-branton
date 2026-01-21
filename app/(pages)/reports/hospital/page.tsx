@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import HospitalClient from "./_components/HospitalClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 1;
 
 export default async function HospitalReportPage() {
   const session = await auth();

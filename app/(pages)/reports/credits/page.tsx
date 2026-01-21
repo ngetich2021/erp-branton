@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import CreditsClient from "./_components/CreditsClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 1;
 
 export default async function CreditsReportPage() {
   const session = await auth();

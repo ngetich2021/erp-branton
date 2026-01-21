@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import LabClient from "./_components/LabClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 1;
 
 export default async function LabReportPage() {
   const session = await auth();

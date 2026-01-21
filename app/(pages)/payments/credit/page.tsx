@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import CreditsClient from "./_components/CreditsClient";
 
+export const revalidate = 1;
+
 interface PatientOption {
   value: string;          // book.id
   label: string;
